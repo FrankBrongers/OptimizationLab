@@ -2,7 +2,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include <math.h>
-#include <sys/time.h> 
+#include <sys/time.h>
 #include "simpletimer.h"
 #include "parse.h"
 #include "vec.h"
@@ -38,6 +38,30 @@ data_t squared_eucledean_distance(data_t *x,data_t *y, int length){
 	}
 	return distance;
 }
+
+data_t OPTsquared_eucledean_distance(data_t *x,data_t *y, int length){
+	data_t distance=0;
+    data_t z, z2, z3, z4;
+	int i = 0;
+    int overig = length % 4;
+    int length2 = length - overig;
+	for(i=0;i<length2;i+4){
+        z = x[i]-y[i];
+        z2 = x[i+1]-y[i+1];
+        z3 = x[i+2]-y[i+2];
+        z4 = x[i+3]-y[i+3];
+		distance += z*z+z2*z2+z3*z3+z4*z4;
+
+	}
+    for(i=length2;i<length;i++){
+        data_t z = x[i]-y[i];
+        distance += z*z;
+	return distance;
+    }
+}
+// Gedrocht van Teun
+// (x[i]-y[i])*(x[i]-y[i])+(x[i+1]-y[i+1])*(x[i+1]-y[i+1])+(x[i+2]-y[i+2])*(x[i+2]-y[i+2])+(x[i+3]-y[i+3])*(x[i+3]-y[i+3])
+
 data_t norm(data_t *x, int length){
     data_t n = 0;
     int i=0;
@@ -112,7 +136,7 @@ data_t *ref_classify_ED(unsigned int lookFor, unsigned int *found) {
     struct timeval stv, etv;
     int i,closest_point=0;
     data_t min_distance,current_distance;
-	
+
 	timer_start(&stv);
 	min_distance = squared_eucledean_distance(features[lookFor],features[0],FEATURE_LENGTH);
     	result[0] = min_distance;
@@ -139,10 +163,10 @@ data_t *opt_classify_ED(unsigned int lookFor, unsigned int *found) {
 
 	timer_start(&stv);
     //FROM HERE
-	min_distance = squared_eucledean_distance(features[lookFor],features[0],FEATURE_LENGTH);
+	min_distance = OPTsquared_eucledean_distance(features[lookFor],features[0],FEATURE_LENGTH);
     	result[0] = min_distance;
 	for(i=1;i<ROWS-1;i++){
-		current_distance = squared_eucledean_distance(features[lookFor],features[i],FEATURE_LENGTH);
+		current_distance = OPTsquared_eucledean_distance(features[lookFor],features[i],FEATURE_LENGTH);
         	result[i]=current_distance;
 		if(current_distance<min_distance){
 			min_distance=current_distance;
@@ -181,7 +205,7 @@ data_t *ref_classify_CS(unsigned int lookFor, unsigned int* found) {
     return result;
 }
 
-//Modify this function 
+//Modify this function
 data_t *opt_classify_CS(unsigned int lookFor, unsigned int *found) {
     data_t *result =(data_t*)malloc(sizeof(data_t)*(ROWS-1));
     struct timeval stv, etv;
@@ -214,34 +238,34 @@ int check_correctness(classifying_funct a, classifying_funct b, unsigned int loo
     unsigned int i, a_found, b_found;
     data_t *a_res = a(lookFor, &a_found);
     data_t *b_res = b(lookFor, &b_found);
-    
+
     for(i=0;i<ROWS-1;i++){
         if(a_res[i]!=b_res[i])
             return 0;
     }
     if (a_found != b_found) return 0;
     *found=a_found;
-    return 1; 
+    return 1;
 }
 
 int main(int argc, char **argv){
 	char* dataset_name=DATASET;
 	int i,j;
         struct timeval stv, etv;
-	unsigned int lookFor=ROWS-1, located;     
+	unsigned int lookFor=ROWS-1, located;
 	//PARSE CSV
-	
+
 	//holds the information regarding author and title
 	char metadata[ROWS][2][20];
 
-	timer_start(&stv); 	
-	parse_csv(dataset_name, features, metadata); 
-	printf("Parsing took %9.6f s \n\n", timer_end(stv));	 
+	timer_start(&stv);
+	parse_csv(dataset_name, features, metadata);
+	printf("Parsing took %9.6f s \n\n", timer_end(stv));
 
     printf("Classifying using MD:");
     printf("<Record %d, author =\"%s\", title=\"%s\">\n",lookFor,metadata[lookFor][0],metadata[lookFor][1]);
     if(check_correctness(ref_classify_MD,opt_classify_MD, lookFor, &located)){
-        printf("opt_classify_MD is correct, speedup: %10.6f\n\n",timer_ref_MD/timer_opt_MD);        
+        printf("opt_classify_MD is correct, speedup: %10.6f\n\n",timer_ref_MD/timer_opt_MD);
     }
     else
         printf("opt_classify_MD is incorrect! \n"); // , speedup: %10.6f\n\n",timer_ref_MD/timer_opt_MD);
@@ -251,7 +275,7 @@ int main(int argc, char **argv){
     printf("Classifying using ED:");
     printf("<Record %d, author =\"%s\", title=\"%s\">\n",lookFor,metadata[lookFor][0],metadata[lookFor][1]);
     if(check_correctness(ref_classify_ED,opt_classify_ED, lookFor, &located)) {
-        printf("opt_classify_ED is correct, speedup: %10.6f\n\n",timer_ref_ED/timer_opt_ED);        
+        printf("opt_classify_ED is correct, speedup: %10.6f\n\n",timer_ref_ED/timer_opt_ED);
     }
     else
         printf("opt_classify_ED id incorrect!\n\n");
@@ -261,7 +285,7 @@ int main(int argc, char **argv){
     printf("Classifying using CS (cosine similarity):");
     printf("<Record %d, author =\"%s\", title=\"%s\">\n",lookFor,metadata[lookFor][0],metadata[lookFor][1]);
     if(check_correctness(ref_classify_CS,opt_classify_CS, lookFor, &located)) {
-        printf("opt_classify_CS is correct, speedup: %10.6f\n\n",timer_ref_CS/timer_opt_CS);        
+        printf("opt_classify_CS is correct, speedup: %10.6f\n\n",timer_ref_CS/timer_opt_CS);
     }
     else
         printf("opt_classify_CS id incorrect!\n\n");
