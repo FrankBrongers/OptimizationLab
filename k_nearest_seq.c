@@ -163,10 +163,10 @@ data_t *opt_classify_ED(unsigned int lookFor, unsigned int *found) {
 
 	timer_start(&stv);
     //FROM HERE
-	min_distance = OPTsquared_eucledean_distance(features[lookFor],features[0],FEATURE_LENGTH);
+	min_distance = squared_eucledean_distance(features[lookFor],features[0],FEATURE_LENGTH);
     	result[0] = min_distance;
 	for(i=1;i<ROWS-1;i++){
-		current_distance = OPTsquared_eucledean_distance(features[lookFor],features[i],FEATURE_LENGTH);
+		current_distance = squared_eucledean_distance(features[lookFor],features[i],FEATURE_LENGTH);
         	result[i]=current_distance;
 		if(current_distance<min_distance){
 			min_distance=current_distance;
