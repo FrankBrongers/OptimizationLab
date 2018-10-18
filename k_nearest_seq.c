@@ -40,23 +40,23 @@ data_t squared_eucledean_distance(data_t *x,data_t *y, int length){
 }
 
 data_t OPTsquared_eucledean_distance(data_t *x,data_t *y, int length){
-	data_t distance=0;
-    data_t z, z2, z3, z4;
-	int i = 0;
+    data_t distance=0;
+    data_t z=0, z2=0, z3=0, z4=0;
+    int i = 0;
     int overig = length % 4;
-    int length2 = length - overig;
-	for(i=0;i<length2;i+4){
+    length = length - overig;
+    for(i=0;i<length;i+4){
         z = x[i]-y[i];
         z2 = x[i+1]-y[i+1];
         z3 = x[i+2]-y[i+2];
         z4 = x[i+3]-y[i+3];
-		distance += z*z+z2*z2+z3*z3+z4*z4;
-
-	}
-    for(i=length2;i<length;i++){
-        data_t z = x[i]-y[i];
+        distance += z*z+z2*z2+z3*z3+z4*z4;
+    }
+    overig = length + length;
+    for(i=length;i<length;i++){
+        z = x[i]-y[i];
         distance += z*z;
-	return distance;
+        return distance;
     }
 }
 // Gedrocht van Teun
