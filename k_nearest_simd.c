@@ -129,12 +129,27 @@ data_t squared_eucledean_distance(data_t *x,data_t *y, int length){
 }
 
 data_t OPTsquared_eucledean_distance(data_t *x,data_t *y, int length){
-	data_t distance=0;
-	int i = 0;
-	for(i=0;i<length;i++){
-		distance+= fabs((x[i]-y[i])*(x[i]-y[i]));
-	}
-	return distance;
+    int i=0;
+    data_t result=0;
+    __m256d vx,vy,sub,abs_diff;
+    __m256d distance=_mm256_set_pd(0.0,0.0,0.0,0.0);
+    __m256d zero= _mm256_set_pd(0.0,0.0,0.0,0.0);
+    for(i=0;i<length;i+=4){
+         vx = _mm256_load_pd(x+i);
+         vy = _mm256_load_pd(y+i);
+         sub = _mm256_sub_pd(vx,vy);
+         abs_diff= abs256_pd(sub);
+         distance=_mm256_add_pd(distance,abs_diff);
+    }
+    distance = _mm256_hadd_pd(distance,zero);
+    double *v_distance = (double*) &distance;
+    result = v_distance[0]+v_distance[2];
+
+    while (i < length) {
+        result += fabs(*(x+i) - *(y+i));
+        i++;
+    }
+	return result;
 }
 
 data_t norm(data_t *x, int length){
@@ -155,6 +170,30 @@ data_t cosine_similarity(data_t *x, data_t *y, int length){
     }
     sim = sim / mult(norm(x,FEATURE_LENGTH),norm(y,FEATURE_LENGTH));
     return sim;
+}
+
+data_t OPTcosine_similarity(data_t *x, data_t *y, int length){
+    int i=0;
+    data_t result=0;
+    __m256d vx,vy,sub,abs_diff;
+    __m256d distance=_mm256_set_pd(0.0,0.0,0.0,0.0);
+    __m256d zero= _mm256_set_pd(0.0,0.0,0.0,0.0);
+    for(i=0;i<length;i+=4){
+         vx = _mm256_load_pd(x+i);
+         vy = _mm256_load_pd(y+i);
+         sub = _mm256_sub_pd(vx,vy);
+         abs_diff= abs256_pd(sub);
+         distance=_mm256_add_pd(distance,abs_diff);
+    }
+    distance = _mm256_hadd_pd(distance,zero);
+    double *v_distance = (double*) &distance;
+    result = v_distance[0]+v_distance[2];
+
+    while (i < length) {
+        result += fabs(*(x+i) - *(y+i));
+        i++;
+    }
+	return result;
 }
 
 
@@ -292,10 +331,10 @@ data_t *opt_classify_CS(unsigned int lookFor, unsigned int *found) {
     timer_start(&stv);
 
     //MODIFY FROM HERE
-	min_distance = cosine_similarity(features[lookFor],features[0],FEATURE_LENGTH);
+	min_distance = OPTcosine_similarity(features[lookFor],features[0],FEATURE_LENGTH);
     	result[0] = min_distance;
 	for(i=1;i<ROWS-1;i++) {
-		current_distance = cosine_similarity(features[lookFor],features[i],FEATURE_LENGTH);
+		current_distance = OPTcosine_similarity(features[lookFor],features[i],FEATURE_LENGTH);
         	result[i]=current_distance;
 		if(current_distance>min_distance){
 			min_distance=current_distance;
