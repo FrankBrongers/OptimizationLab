@@ -132,7 +132,7 @@ data_t OPTsquared_eucledean_distance(data_t *x,data_t *y, int length){
 	data_t distance=0;
 	int i = 0;
 	for(i=0;i<length;i++){
-		distance+= (x[i]-y[i])*(x[i]-y[i]);
+		distance+= fabs((x[i]-y[i])*(x[i]-y[i]));
 	}
 	return distance;
 }
