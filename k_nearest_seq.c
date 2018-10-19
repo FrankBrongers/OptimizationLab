@@ -41,18 +41,18 @@ data_t squared_eucledean_distance(data_t *x,data_t *y, int length){
 
 data_t OPTsquared_eucledean_distance(data_t *x,data_t *y, int length){
     data_t distance=0;
-    data_t z, z2, z3, z4=0;
-    int i = 0;
+    data_t z, z2, z3, z4;
+    int i;
     int overig = length % 4;
     int length2 = length - overig;
-    for(;i<length2;i=i+4){
+    for(i=0;i<length2;i=i+4){
         z = x[i]-y[i];
         z2 = x[i+1]-y[i+1];
         z3 = x[i+2]-y[i+2];
         z4 = x[i+3]-y[i+3];
         distance += z*z+z2*z2+z3*z3+z4*z4;
     }
-    for(i = length2;i<length;i++){
+    for(;i<length;i++){
         z = x[i]-y[i];
         distance += z*z;
     }
@@ -72,16 +72,13 @@ data_t norm(data_t *x, int length){
 }
 data_t OPTnorm(data_t *x, int length){
     data_t n = 0;
-    int i=0;
-    int overig = length % 4;
+    int i;
+    int overig = length % 8;
     int length2 = length - overig;
-    for (i=0;i<length2;i=i+4){
-        n += x[i]*x[i];
-        n += x[i+1]*x[i+1];
-        n += x[i+2]*x[i+2];
-        n += x[i+3]*x[i+3];
+    for (i=0;i<length2;i=i+8){
+        n += (x[i]*x[i])+(x[i+1]*x[i+1])+(x[i+2]*x[i+2])+(x[i+3]*x[i+3])+(x[i+4]*x[i+4])+(x[i+5]*x[i+5])+(x[i+6]*x[i+6])+(x[i+7]*x[i+7]);
     }
-    for(i=length2; i<length;i++){
+    for(; i<length;i++){
         n += x[i]*x[i];
     }
     n = sqrt(n);
@@ -100,20 +97,13 @@ data_t cosine_similarity(data_t *x, data_t *y, int length){
 
 data_t OPTcosine_similarity(data_t *x, data_t *y, int length){
     data_t sim=0;
-    int i=0;
+    int i;
     int overig = length % 8;
     int length2 = length - overig;
-    for(;i<length2;i=i+8){
-        sim += x[i]*y[i];
-        sim += x[i+1]*y[i+1];
-        sim += x[i+2]*y[i+2];
-        sim += x[i+3]*y[i+3];
-        sim += x[i+4]*y[i+4];
-        sim += x[i+5]*y[i+5];
-        sim += x[i+6]*y[i+6];
-        sim += x[i+7]*y[i+7];
+    for(i=0;i<length2;i=i+8){
+        sim += (x[i]*y[i])+(x[i+1]*y[i+1])+(x[i+2]*y[i+2])+(x[i+3]*y[i+3])+(x[i+4]*y[i+4])+(x[i+5]*y[i+5])+(x[i+6]*y[i+6])+(x[i+7]*y[i+7]);
     }
-    for(i=length2; i<length;i++){
+    for(; i<length;i++){
         sim += x[i]*y[i];
     }
     sim = sim / (OPTnorm(x,FEATURE_LENGTH)*OPTnorm(y,FEATURE_LENGTH));
@@ -204,7 +194,7 @@ data_t *opt_classify_ED(unsigned int lookFor, unsigned int *found) {
     	result[0] = min_distance;
 	for(i=1;i<ROWS-1;i++){
 		current_distance = OPTsquared_eucledean_distance(features[lookFor],features[i],FEATURE_LENGTH);
-        	result[i]=current_distance;
+        result[i]=current_distance;
 		if(current_distance<min_distance){
 			min_distance=current_distance;
 			closest_point=i;
