@@ -41,25 +41,19 @@ data_t squared_eucledean_distance(data_t *x,data_t *y, int length){
 
 data_t OPTsquared_eucledean_distance(data_t *x,data_t *y, int length){
     data_t distance=0;
-    data_t z, z2, z3, z4;
-    int i;
+    data_t z, z2, z3, z4, zz, zz2, zz3, zz4;
+    int i = 0;
     int overig = length % 4;
     int length2 = length - overig;
-    for(i=0;i<length2;i=i+4){
-        z = x[i]-y[i];
-        z2 = x[i+1]-y[i+1];
-        z3 = x[i+2]-y[i+2];
-        z4 = x[i+3]-y[i+3];
-        distance += z*z+z2*z2+z3*z3+z4*z4;
+    for(i=0;i<length2;i+=4){
+        distance = distance +(((x[i]-y[i])*(x[i]-y[i]))+(((x[i+1]-y[i+1])*(x[i+1]-y[i+1]))+(((x[i+2]-y[i+2])*(x[i+2]-y[i+2]))+((x[i+3]-y[i+3])*(x[i+3]-y[i+3])))));
     }
-    for(;i<length;i++){
-        z = x[i]-y[i];
-        distance += z*z;
+    for(i = length2;i<length;i++){
+        distance = distance +(x[i]-y[i]*x[i]-y[i]);
     }
     return distance;
 }
-// Gedrocht van Teun
-// (x[i]-y[i])*(x[i]-y[i])+(x[i+1]-y[i+1])*(x[i+1]-y[i+1])+(x[i+2]-y[i+2])*(x[i+2]-y[i+2])+(x[i+3]-y[i+3])*(x[i+3]-y[i+3])
+
 
 data_t norm(data_t *x, int length){
     data_t n = 0;
