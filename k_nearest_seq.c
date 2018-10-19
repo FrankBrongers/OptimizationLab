@@ -41,23 +41,22 @@ data_t squared_eucledean_distance(data_t *x,data_t *y, int length){
 
 data_t OPTsquared_eucledean_distance(data_t *x,data_t *y, int length){
     data_t distance=0;
-    data_t z=0, z2=0, z3=0, z4=0;
+    data_t z, z2, z3, z4=0;
     int i = 0;
     int overig = length % 4;
-    length = length - overig;
-    for(i=0;i<length;i+4){
+    int length2 = length - overig;
+    for(;i<length2;i=i+4){
         z = x[i]-y[i];
         z2 = x[i+1]-y[i+1];
         z3 = x[i+2]-y[i+2];
         z4 = x[i+3]-y[i+3];
         distance += z*z+z2*z2+z3*z3+z4*z4;
     }
-    overig = length + length;
-    for(i=length;i<length;i++){
+    for(;i<length;i++){
         z = x[i]-y[i];
         distance += z*z;
-        return distance;
     }
+    return distance;
 }
 // Gedrocht van Teun
 // (x[i]-y[i])*(x[i]-y[i])+(x[i+1]-y[i+1])*(x[i+1]-y[i+1])+(x[i+2]-y[i+2])*(x[i+2]-y[i+2])+(x[i+3]-y[i+3])*(x[i+3]-y[i+3])
@@ -163,10 +162,10 @@ data_t *opt_classify_ED(unsigned int lookFor, unsigned int *found) {
 
 	timer_start(&stv);
     //FROM HERE
-	min_distance = squared_eucledean_distance(features[lookFor],features[0],FEATURE_LENGTH);
+	min_distance = OPTsquared_eucledean_distance(features[lookFor],features[0],FEATURE_LENGTH);
     	result[0] = min_distance;
 	for(i=1;i<ROWS-1;i++){
-		current_distance = squared_eucledean_distance(features[lookFor],features[i],FEATURE_LENGTH);
+		current_distance = OPTsquared_eucledean_distance(features[lookFor],features[i],FEATURE_LENGTH);
         	result[i]=current_distance;
 		if(current_distance<min_distance){
 			min_distance=current_distance;
