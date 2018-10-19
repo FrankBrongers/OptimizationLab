@@ -133,20 +133,20 @@ data_t OPTsquared_eucledean_distance(data_t *x,data_t *y, int length){
     data_t result=0;
     __m256d vx,vy,sub,abs_diff;
     __m256d distance=_mm256_set_pd(0.0,0.0,0.0,0.0);
-    __m256d zero= _mm256_set_pd(0.0,0.0,0.0,0.0);
     for(i=0;i<length;i+=4){
          vx = _mm256_load_pd(x+i);
          vy = _mm256_load_pd(y+i);
          sub = _mm256_sub_pd(vx,vy);
          abs_diff= abs256_pd(sub);
+         abs_diff= _mm256_mul_pd(abs_diff, abs_diff);
          distance=_mm256_add_pd(distance,abs_diff);
     }
-    distance = _mm256_hadd_pd(distance,zero);
+
     double *v_distance = (double*) &distance;
-    result = v_distance[0]+v_distance[2];
+    result = v_distance[0]+v_distance[1]+v_distance[2]+v_distance[3];
 
     while (i < length) {
-        result += fabs(*(x+i) - *(y+i));
+        result += mult(fabs(x[i]-y[i]),fabs(x[i]-y[i]));
         i++;
     }
 	return result;
