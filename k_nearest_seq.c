@@ -52,7 +52,7 @@ data_t OPTsquared_eucledean_distance(data_t *x,data_t *y, int length){
         z4 = x[i+3]-y[i+3];
         distance += z*z+z2*z2+z3*z3+z4*z4;
     }
-    for(;i<length;i++){
+    for(i = length2;i<length;i++){
         z = x[i]-y[i];
         distance += z*z;
     }
@@ -70,6 +70,23 @@ data_t norm(data_t *x, int length){
     n = sqrt(n);
     return n;
 }
+data_t OPTnorm(data_t *x, int length){
+    data_t n = 0;
+    int i=0;
+    int overig = length % 4;
+    int length2 = length - overig;
+    for (i=0;i<length2;i=i+4){
+        n += x[i]*x[i];
+        n += x[i+1]*x[i+1];
+        n += x[i+2]*x[i+2];
+        n += x[i+3]*x[i+3];
+    }
+    for(i=length2; i<length;i++){
+        n += x[i]*x[i];
+    }
+    n = sqrt(n);
+    return n;
+}
 
 data_t cosine_similarity(data_t *x, data_t *y, int length){
     data_t sim=0;
@@ -81,6 +98,27 @@ data_t cosine_similarity(data_t *x, data_t *y, int length){
     return sim;
 }
 
+data_t OPTcosine_similarity(data_t *x, data_t *y, int length){
+    data_t sim=0;
+    int i=0;
+    int overig = length % 8;
+    int length2 = length - overig;
+    for(;i<length2;i=i+8){
+        sim += x[i]*y[i];
+        sim += x[i+1]*y[i+1];
+        sim += x[i+2]*y[i+2];
+        sim += x[i+3]*y[i+3];
+        sim += x[i+4]*y[i+4];
+        sim += x[i+5]*y[i+5];
+        sim += x[i+6]*y[i+6];
+        sim += x[i+7]*y[i+7];
+    }
+    for(i=length2; i<length;i++){
+        sim += x[i]*y[i];
+    }
+    sim = sim / (OPTnorm(x,FEATURE_LENGTH)*OPTnorm(y,FEATURE_LENGTH));
+    return sim;
+}
 
 data_t *ref_classify_MD(unsigned int lookFor, unsigned int *found) {
     data_t *result =(data_t*)malloc(sizeof(data_t)*(ROWS-1));
@@ -214,10 +252,10 @@ data_t *opt_classify_CS(unsigned int lookFor, unsigned int *found) {
     timer_start(&stv);
 
     //MODIFY FROM HERE
-	min_distance = cosine_similarity(features[lookFor],features[0],FEATURE_LENGTH);
+	min_distance = OPTcosine_similarity(features[lookFor],features[0],FEATURE_LENGTH);
     	result[0] = min_distance;
 	for(i=1;i<ROWS-1;i++) {
-		current_distance = cosine_similarity(features[lookFor],features[i],FEATURE_LENGTH);
+		current_distance = OPTcosine_similarity(features[lookFor],features[i],FEATURE_LENGTH);
         	result[i]=current_distance;
 		if(current_distance>min_distance){
 			min_distance=current_distance;
