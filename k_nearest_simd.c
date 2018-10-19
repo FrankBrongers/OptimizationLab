@@ -131,15 +131,15 @@ data_t squared_eucledean_distance(data_t *x,data_t *y, int length){
 data_t OPTsquared_eucledean_distance(data_t *x,data_t *y, int length){
     int i=0;
     data_t result=0;
-    __m256d vx,vy,sub,abs_diff;
+    __m256d vx,vy,sub,diff;
     __m256d distance=_mm256_set_pd(0.0,0.0,0.0,0.0);
     for(i=0;i<length;i+=4){
          vx = _mm256_load_pd(x+i);
          vy = _mm256_load_pd(y+i);
          sub = _mm256_sub_pd(vx,vy);
-         abs_diff= abs256_pd(sub);
-         abs_diff= _mm256_mul_pd(abs_diff, abs_diff);
-         distance=_mm256_add_pd(distance,abs_diff);
+         diff= abs256_pd(sub);
+         diff= _mm256_mul_pd(diff, diff);
+         distance=_mm256_add_pd(distance,diff);
     }
 
     double *v_distance = (double*) &distance;
@@ -162,6 +162,21 @@ data_t norm(data_t *x, int length){
     return n;
 }
 
+data_t OPTnorm(data_t *x, int length){
+    data_t n = 0;
+    int i;
+    int overig = length % 8;
+    int length2 = length - overig;
+    for (i=0;i<length2;i=i+8){
+        n += (x[i]*x[i])+(x[i+1]*x[i+1])+(x[i+2]*x[i+2])+(x[i+3]*x[i+3])+(x[i+4]*x[i+4])+(x[i+5]*x[i+5])+(x[i+6]*x[i+6])+(x[i+7]*x[i+7]);
+    }
+    for(; i<length;i++){
+        n += x[i]*x[i];
+    }
+    n = sqrt(n);
+    return n;
+}
+
 data_t cosine_similarity(data_t *x, data_t *y, int length){
     data_t sim=0;
     int i=0;
@@ -174,26 +189,25 @@ data_t cosine_similarity(data_t *x, data_t *y, int length){
 
 data_t OPTcosine_similarity(data_t *x, data_t *y, int length){
     int i=0;
-    data_t result=0;
-    __m256d vx,vy,sub,abs_diff;
+    data_t sim=0;
+    __m256d vx,vy,sub,diff;
     __m256d distance=_mm256_set_pd(0.0,0.0,0.0,0.0);
-    __m256d zero= _mm256_set_pd(0.0,0.0,0.0,0.0);
     for(i=0;i<length;i+=4){
          vx = _mm256_load_pd(x+i);
          vy = _mm256_load_pd(y+i);
-         sub = _mm256_sub_pd(vx,vy);
-         abs_diff= abs256_pd(sub);
-         distance=_mm256_add_pd(distance,abs_diff);
+         diff= _mm256_div_pd(diff, diff);
+         distance=_mm256_add_pd(distance,diff);
     }
-    distance = _mm256_hadd_pd(distance,zero);
+
     double *v_distance = (double*) &distance;
-    result = v_distance[0]+v_distance[2];
+    sim = v_distance[0]+v_distance[1]+v_distance[2]+v_distance[3];
 
     while (i < length) {
-        result += fabs(*(x+i) - *(y+i));
+        sim += mult(fabs(x[i]-y[i]),fabs(x[i]-y[i]));
         i++;
     }
-	return result;
+    sim = sim / mult(OPTnorm(x,FEATURE_LENGTH),OPTnorm(y,FEATURE_LENGTH));
+	return sim;
 }
 
 
